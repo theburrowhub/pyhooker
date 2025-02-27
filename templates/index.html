@@ -83,11 +83,43 @@
             padding: 10px;
             background-color: #f1f1f1;
             border-left: 4px solid #007BFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .url:hover {
-            background-color: #0056b3;
+            background-color: #e9e9e9;
             cursor: pointer;
+        }
+        
+        .copy-icon {
+            margin-left: 10px;
+            color: #007BFF;
+            cursor: pointer;
+        }
+        
+        .copy-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            z-index: 1000;
+            display: none;
+            animation: fadeIn 0.3s, fadeOut 0.3s 0.7s;
+        }
+        
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+        
+        @keyframes fadeOut {
+            from {opacity: 1;}
+            to {opacity: 0;}
         }
 
     </style>
@@ -98,9 +130,13 @@
     <div id="panel-izquierdo">
         <h1>PyHooker Dashboard</h1>
         <div class="url" onclick="copiarTextoAlPortapapeles('{{ public_url }}/webhook')">
-            <strong>Tu URL de Webhook:</strong>
-            <span>{{ public_url }}/webhook</span>
+            <div>
+                <strong>Tu URL de Webhook:</strong>
+                <span>{{ public_url }}/webhook</span>
+            </div>
+            <i class="copy-icon">📋</i>
         </div>
+        <div id="copy-message" class="copy-message">Webhook copiado</div>
         <div id="lista-peticiones">
             <!-- Lista de peticiones se inserta aquí -->
         </div>
@@ -120,12 +156,90 @@
     const listaPeticionesDiv = document.getElementById('lista-peticiones');
     const detallesPeticionDiv = document.getElementById('detalles-peticion');
     let peticionesRecibidas = [];
+    
+    // Variable para controlar si la recarga automática está activada
+    let autoReloadEnabled = true;
+    // Intervalo de recarga en milisegundos (5 segundos)
+    const reloadInterval = 5000;
+    
+    // Función para recargar solo la lista de peticiones
+    function setupAutoReload() {
+        setInterval(() => {
+            if (autoReloadEnabled) {
+                // En lugar de recargar toda la página, hacemos una petición AJAX
+                fetch('/api/peticiones')
+                    .then(response => response.json())
+                    .then(data => {
+                        peticionesRecibidas = data;
+                        renderListaPeticiones();
+                    })
+                    .catch(error => console.error('Error al actualizar la lista:', error));
+            }
+        }, reloadInterval);
+    }
+    
+    // Iniciar la recarga automática cuando se carga la página
+    setupAutoReload();
 
     // Función para copiar texto al portapapeles
     function copiarTextoAlPortapapeles(texto) {
-        navigator.clipboard.writeText(texto)
-            .then(() => alert("Texto copiado al portapapeles"))
-            .catch(err => console.error("Error al copiar el texto: ", err));
+        // Verificar si la API Clipboard está disponible
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(texto)
+                .then(() => {
+                    mostrarMensajeCopia();
+                })
+                .catch(err => {
+                    console.error("Error al copiar el texto: ", err);
+                    copiarTextoAlternativo(texto);
+                });
+        } else {
+            // Método alternativo si la API Clipboard no está disponible
+            copiarTextoAlternativo(texto);
+        }
+    }
+
+    // Función para mostrar el mensaje de copia
+    function mostrarMensajeCopia() {
+        const copyMessage = document.getElementById('copy-message');
+        copyMessage.style.display = 'block';
+        
+        // Ocultar el mensaje después de 1 segundo
+        setTimeout(() => {
+            copyMessage.style.display = 'none';
+        }, 1000);
+    }
+
+    // Método alternativo para copiar texto
+    function copiarTextoAlternativo(texto) {
+        // Crear un elemento textarea temporal
+        const textArea = document.createElement('textarea');
+        textArea.value = texto;
+        
+        // Hacer que el textarea no sea visible
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        let exitoso = false;
+        try {
+            // Ejecutar el comando de copia
+            exitoso = document.execCommand('copy');
+        } catch (err) {
+            console.error('Error al copiar texto: ', err);
+        }
+        
+        // Eliminar el textarea temporal
+        document.body.removeChild(textArea);
+        
+        // Mostrar mensaje de éxito
+        if (exitoso) {
+            mostrarMensajeCopia();
+        }
     }
 
     // Función para escapar los caracteres especiales (saltos de línea, comillas, etc.)
