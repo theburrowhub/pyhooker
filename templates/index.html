@@ -276,6 +276,8 @@
                 <pre>${escaparHtml(req.body)}</pre>
                 <h3>JSON</h3>
                 <pre>${escaparHtml(JSON.stringify(req.json, null, 2))}</pre>
+                <h3>Output</h3>
+                <pre>${escaparHtml(JSON.stringify(req.script_output, null, 2))}</pre>
             `;
     }
 
