@@ -48,7 +48,6 @@ async def webhook(request: Request):
         'datetime': time.strftime("%Y-%m-%d %H:%M:%S")
     }
 
-    # Almacenar la petición
     peticiones_recibidas.insert(0, info_peticion)
 
     # Notificar a los websockets conectados
@@ -78,6 +77,19 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.get("/api/peticiones")
 async def get_peticiones():
     return peticiones_recibidas
+
+
+@app.delete("/api/peticiones")
+async def delete_peticiones():
+    global peticiones_recibidas
+    peticiones_recibidas = []
+    
+    # Notificar a los websockets conectados que se han eliminado todas las peticiones
+    data = json.dumps({'event': 'clear_requests'})
+    for websocket in websockets_conectados:
+        await websocket.send_text(data)
+    
+    return {"message": "Todas las peticiones han sido eliminadas"}
 
 
 if __name__ == "__main__":
