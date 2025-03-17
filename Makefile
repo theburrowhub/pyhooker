@@ -22,3 +22,11 @@ pip-install: .venv ## Install the requirements
 
 pip-freeze: .venv ## Freeze the requirements
 	. .venv/bin/activate && pip freeze > requirements.txt
+
+build-binary: pip-install ## Build a standalone binary using PyInstaller
+	. .venv/bin/activate && pip install pyinstaller && pyinstaller --onefile --name pyhooker pyhooker.py
+
+install-local: build-binary ## Install the binary locally
+	sudo cp dist/pyhooker /usr/local/bin/
+	@echo "PyHooker has been installed successfully!"
+	@echo "You can now run it from anywhere using the 'pyhooker' command."
