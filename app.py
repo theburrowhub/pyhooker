@@ -2,6 +2,7 @@
 
 import json
 import time
+import os
 
 import uvicorn
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -12,10 +13,14 @@ from starlette.staticfiles import StaticFiles
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="./public/static"), name="static")
+# Get resource paths from environment variables or use defaults
+templates_dir = os.environ.get("TEMPLATES_DIR", "templates")
+public_dir = os.environ.get("PUBLIC_DIR", "./public")
+
+app.mount("/static", StaticFiles(directory=os.path.join(public_dir, "static")), name="static")
 
 # Directorio de plantillas
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=templates_dir)
 
 # Lista para almacenar las peticiones recibidas
 peticiones_recibidas = []
