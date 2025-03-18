@@ -122,6 +122,41 @@
             to {opacity: 0;}
         }
 
+        /* Estilos para el botón de eliminar */
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+
+        .delete-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .delete-icon {
+            margin-right: 5px;
+        }
+
+        .actions-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+        }
+
     </style>
 </head>
 <body>
@@ -137,6 +172,15 @@
             <i class="copy-icon">📋</i>
         </div>
         <div id="copy-message" class="copy-message">Webhook copiado</div>
+        
+        <!-- Contenedor para acciones -->
+        <div class="actions-container">
+            <h2>Webhooks recibidos</h2>
+            <button id="delete-all-button" class="delete-button" onclick="eliminarTodasLasPeticiones()">
+                <span class="delete-icon">🗑️</span> Eliminar todos
+            </button>
+        </div>
+        
         <div id="lista-peticiones">
             <!-- Lista de peticiones se inserta aquí -->
         </div>
@@ -155,6 +199,7 @@
 <script>
     const listaPeticionesDiv = document.getElementById('lista-peticiones');
     const detallesPeticionDiv = document.getElementById('detalles-peticion');
+    const deleteAllButton = document.getElementById('delete-all-button');
     let peticionesRecibidas = [];
     
     // Variable para controlar si la recarga automática está activada
@@ -172,6 +217,7 @@
                     .then(data => {
                         peticionesRecibidas = data;
                         renderListaPeticiones();
+                        actualizarEstadoBotonEliminar();
                     })
                     .catch(error => console.error('Error al actualizar la lista:', error));
             }
@@ -263,6 +309,9 @@
             peticionDiv.onclick = () => mostrarDetallesPeticion(index);
             listaPeticionesDiv.appendChild(peticionDiv);
         });
+        
+        // Actualizar el estado del botón de eliminar
+        actualizarEstadoBotonEliminar();
     }
 
     // Función para mostrar los detalles de una petición en el panel derecho
@@ -279,6 +328,30 @@
             `;
     }
 
+    // Función para eliminar todas las peticiones
+    function eliminarTodasLasPeticiones() {
+        if (confirm('¿Estás seguro de que deseas eliminar todos los webhooks recibidos?')) {
+            fetch('/api/peticiones', {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Respuesta del servidor:', data);
+                // La lista se actualizará automáticamente a través del WebSocket
+            })
+            .catch(error => console.error('Error al eliminar las peticiones:', error));
+        }
+    }
+
+    // Función para actualizar el estado del botón de eliminar
+    function actualizarEstadoBotonEliminar() {
+        if (peticionesRecibidas.length === 0) {
+            deleteAllButton.disabled = true;
+        } else {
+            deleteAllButton.disabled = false;
+        }
+    }
+
     // Configuración del WebSocket con protocolo adecuado
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -293,6 +366,11 @@
         if (data.event === 'new_request') {
             peticionesRecibidas.unshift(data.data);
             renderListaPeticiones();
+        } else if (data.event === 'clear_requests') {
+            peticionesRecibidas = [];
+            renderListaPeticiones();
+            // Limpiar los detalles si se estaban mostrando
+            detallesPeticionDiv.innerHTML = '<p>Selecciona una petición de la lista para ver sus detalles.</p>';
         }
     };
 
