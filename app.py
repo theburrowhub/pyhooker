@@ -94,3 +94,7 @@ async def delete_peticiones():
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8081)
+
+# Add a main function that can be called from other scripts
+def main():
+    uvicorn.run(app, host="0.0.0.0", port=8081)
