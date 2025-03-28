@@ -1,5 +1,5 @@
 # main.py
-
+import argparse
 import json
 import time
 
@@ -92,9 +92,13 @@ async def delete_peticiones():
     return {"message": "Todas las peticiones han sido eliminadas"}
 
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8081)
+def parser_args():
+    parser = argparse.ArgumentParser(description='Webhook receiver API')
+    parser.add_argument('--port', type=int, default=8081, help='Port to run the API')
+    args = parser.parse_args()
+    return args
 
-# Add a main function that can be called from other scripts
-def main():
-    uvicorn.run(app, host="0.0.0.0", port=8081)
+
+if __name__ == "__main__":
+    args = parser_args()
+    uvicorn.run(app, host="0.0.0.0", port=args.port)
