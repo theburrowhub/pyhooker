@@ -23,8 +23,16 @@ peticiones_recibidas = []
 # Lista de websockets conectados
 websockets_conectados = []
 
-# Iniciar el túnel ngrok en el puerto 8000
-public_url = ngrok.connect(8081).public_url
+
+def parser_args():
+    parser = argparse.ArgumentParser(description='Webhook receiver API')
+    parser.add_argument('--port', type=int, default=8081, help='Port to run the API')
+    args = parser.parse_args()
+    return args
+
+args = parser_args()
+# Iniciar el túnel ngrok en el puerto elegido
+public_url = ngrok.connect(args.port).public_url
 print(f" * Túnel ngrok establecido en {public_url}")
 
 
@@ -90,13 +98,6 @@ async def delete_peticiones():
         await websocket.send_text(data)
     
     return {"message": "Todas las peticiones han sido eliminadas"}
-
-
-def parser_args():
-    parser = argparse.ArgumentParser(description='Webhook receiver API')
-    parser.add_argument('--port', type=int, default=8081, help='Port to run the API')
-    args = parser.parse_args()
-    return args
 
 
 if __name__ == "__main__":
