@@ -1,5 +1,5 @@
 # main.py
-
+import argparse
 import json
 import time
 
@@ -23,8 +23,16 @@ peticiones_recibidas = []
 # Lista de websockets conectados
 websockets_conectados = []
 
-# Iniciar el túnel ngrok en el puerto 8000
-public_url = ngrok.connect(8081).public_url
+
+def parser_args():
+    parser = argparse.ArgumentParser(description='Webhook receiver API')
+    parser.add_argument('--port', type=int, default=8081, help='Port to run the API')
+    args = parser.parse_args()
+    return args
+
+args = parser_args()
+# Iniciar el túnel ngrok en el puerto elegido
+public_url = ngrok.connect(args.port).public_url
 print(f" * Túnel ngrok establecido en {public_url}")
 
 
@@ -93,8 +101,5 @@ async def delete_peticiones():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8081)
-
-# Add a main function that can be called from other scripts
-def main():
-    uvicorn.run(app, host="0.0.0.0", port=8081)
+    args = parser_args()
+    uvicorn.run(app, host="0.0.0.0", port=args.port)
