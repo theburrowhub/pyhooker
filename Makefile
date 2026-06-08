@@ -1,4 +1,5 @@
 .PHONY: all help
+PORT?=8081
 
 help: ## This beautiful help
 	@echo "Usage: make [command]"
@@ -12,7 +13,7 @@ build: pip-install ## Build the application
 run: .venv ## Run the application
 	. .venv/bin/activate && \
 	pip install -r requirements.txt && \
-	python app.py
+	python app.py --port $(PORT)
 
 .venv: ## Create a virtual environment
 	python3 -m venv .venv
